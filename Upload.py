@@ -4,7 +4,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 
-# Load credentials from GitHub Secret
+# Load OAuth credentials
 creds_json = os.environ["YT_CREDENTIALS"]
 creds_dict = json.loads(creds_json)
 
@@ -16,13 +16,15 @@ request = youtube.videos().insert(
     part="snippet,status",
     body={
         "snippet": {
-            "title": "🔥 Auto Upload Working!",
-            "description": "First automated upload from GitHub Actions",
+            "title": "🔥 Auto Edited Viral Short",
+            "description": "Automatically detected, edited and uploaded.",
             "categoryId": "22"
         },
-        "status": {"privacyStatus": "public"}
+        "status": {
+            "privacyStatus": "public"
+        }
     },
-    media_body=MediaFileUpload("output.mp4")
+    media_body=MediaFileUpload("final.mp4")
 )
 
 response = request.execute()
