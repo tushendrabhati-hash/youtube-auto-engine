@@ -32,15 +32,18 @@ jobs:
     - name: Edit video
       run: python edit.py
 
-    - name: Generate AI metadata
+    - name: Generate metadata
       run: python metadata.py
 
-    - name: Random delay (6–8 PM IST)
+    - name: Random delay
       run: |
         DELAY=$((RANDOM % 7200))
         sleep $DELAY
 
-    - name: Upload
+    - name: Upload video
       env:
         YT_CREDENTIALS: ${{ secrets.YT_CREDENTIALS }}
       run: python Upload.py
+
+    - name: Learn from performance
+      run: python analytics.py
