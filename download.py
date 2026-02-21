@@ -1,29 +1,37 @@
 import subprocess
-import sys
+import os
 
-LOG_FILE = "detect.log"
+VIDEO_FILE = "videos.txt"
 OUTPUT_FILE = "output.mp4"
 
 
-def extract_video_id():
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        line = f.readline().strip()
+def get_video_url():
+    if not os.path.exists(VIDEO_FILE):
+        print("videos.txt not found")
+        return None
 
-    parts = line.split("::")
-    return parts[1]
+    with open(VIDEO_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("http"):
+                return line
+
+    return None
 
 
 def download_video():
-    video_id = extract_video_id()
 
-    url = f"https://www.youtube.com/watch?v={video_id}"
+    url = get_video_url()
+
+    if not url:
+        print("No video URL found")
+        return
+
     print("Downloading:", url)
 
-    # ✅ use current python executable
-    python_exec = sys.executable
-
+    # ✅ IMPORTANT: use python module instead of yt-dlp exe
     command = [
-        python_exec,
+        "python",
         "-m",
         "yt_dlp",
         "-f",
@@ -32,7 +40,7 @@ def download_video():
         "mp4",
         "-o",
         OUTPUT_FILE,
-        url,
+        url
     ]
 
     subprocess.run(command, check=True)
