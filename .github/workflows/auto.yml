@@ -36,6 +36,9 @@ jobs:
     # ------------------------------
     - name: Detect new videos
   run: python detect.py | tee detect.log
+
+    - name: Download detected video
+      run: python download.py
  
     # ------------------------------
     # Random Upload Delay
