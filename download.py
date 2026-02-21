@@ -1,54 +1,29 @@
 import subprocess
-import re
+import os
 
-LOG_FILE = "detect.log"
-
-
-def get_video_id():
-    """
-    Reads detect.py output and extracts video id
-    """
-    try:
-        with open(LOG_FILE, "r") as f:
-            lines = f.readlines()
-
-        for line in reversed(lines):
-            if "NEW_VIDEO::" in line:
-                return line.split("::")[1].strip()
-
-    except:
-        pass
-
-    return None
+VIDEO_URL_FILE = "detect.log"
+OUTPUT = "output.mp4"
 
 
-def download_video(video_id):
+def get_video_url():
+    with open(VIDEO_URL_FILE) as f:
+        return f.read().strip()
 
-    url = f"https://www.youtube.com/watch?v={video_id}"
 
-    print("Downloading:", url)
+def download_video():
+
+    url = get_video_url()
 
     command = [
         "yt-dlp",
+        "--cookies", "cookies.txt",
         "-f", "mp4",
-        "-o", "output.mp4",
+        "-o", OUTPUT,
         url
     ]
 
     subprocess.run(command, check=True)
 
 
-def main():
-
-    vid = get_video_id()
-
-    if not vid:
-        print("No new video detected.")
-        return
-
-    download_video(vid)
-
-
 if __name__ == "__main__":
-    main()
-  
+    download_video()
