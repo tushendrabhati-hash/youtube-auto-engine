@@ -1,4 +1,5 @@
 import subprocess
+import sys
 
 LOG_FILE = "detect.log"
 OUTPUT_FILE = "output.mp4"
@@ -18,9 +19,11 @@ def download_video():
     url = f"https://www.youtube.com/watch?v={video_id}"
     print("Downloading:", url)
 
-    # ✅ IMPORTANT FIX — python module call
+    # ✅ use current python executable
+    python_exec = sys.executable
+
     command = [
-        "python",
+        python_exec,
         "-m",
         "yt_dlp",
         "-f",
