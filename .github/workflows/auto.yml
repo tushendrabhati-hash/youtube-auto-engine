@@ -3,7 +3,7 @@ name: YouTube Network Engine
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 12 * * *'   # Daily run (5:30 PM IST)
 
 jobs:
   upload:
@@ -11,8 +11,16 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v3
+    # -----------------------------
+    # Checkout Repository
+    # -----------------------------
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
+
+    # -----------------------------
+    # Install Dependencies
+    # -----------------------------
     - name: Install dependencies
       run: |
         sudo apt update
@@ -23,27 +31,63 @@ jobs:
                     feedparser \
                     yt-dlp
 
+
+    # -----------------------------
+    # Create cookies.txt from secret
+    # -----------------------------
+    - name: Create cookies file
+      run: echo "${{ secrets.YT_COOKIES }}" > cookies.txt
+
+
+    # -----------------------------
+    # Detect latest video
+    # -----------------------------
     - name: Detect videos
       run: python detect.py | tee detect.log
 
+
+    # -----------------------------
+    # Download video
+    # -----------------------------
     - name: Download video
       run: python download.py
 
+
+    # -----------------------------
+    # Create variations (multi upload)
+    # -----------------------------
     - name: Create variations
       run: python variation.py
 
+
+    # -----------------------------
+    # Generate metadata
+    # -----------------------------
     - name: Generate metadata
       run: python metadata.py
 
-    - name: Random delay
+
+    # -----------------------------
+    # Random delay (6–8 PM IST)
+    # -----------------------------
+    - name: Random upload delay
       run: |
+        echo "Waiting random time..."
         DELAY=$((RANDOM % 7200))
         sleep $DELAY
 
-    - name: Upload network videos
+
+    # -----------------------------
+    # Upload videos
+    # -----------------------------
+    - name: Upload to YouTube
       env:
         YT_CREDENTIALS: ${{ secrets.YT_CREDENTIALS }}
       run: python Upload.py
 
-    - name: Learning update
+
+    # -----------------------------
+    # Learning update
+    # -----------------------------
+    - name: Update learning system
       run: python analytics.py
