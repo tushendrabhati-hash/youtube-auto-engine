@@ -1,36 +1,35 @@
 import subprocess
 
 LOG_FILE = "detect.log"
-OUTPUT = "output.mp4"
+OUTPUT_FILE = "output.mp4"
 
 
 def extract_video_id():
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        line = f.readline().strip()
 
-    with open(LOG_FILE) as f:
-        lines = f.readlines()
-
-    for line in lines:
-        if "NEW_VIDEO::" in line:
-            parts = line.strip().split("::")
-            return parts[1]
-
-    raise Exception("No video found")
+    parts = line.split("::")
+    return parts[1]
 
 
 def download_video():
-
     video_id = extract_video_id()
-    url = f"https://www.youtube.com/watch?v={video_id}"
 
+    url = f"https://www.youtube.com/watch?v={video_id}"
     print("Downloading:", url)
 
+    # ✅ IMPORTANT FIX — python module call
     command = [
-        "yt-dlp",
-        "--cookies", "cookies.txt",
-        "-f", "bv*+ba/b",
-        "--merge-output-format", "mp4",
-        "-o", OUTPUT,
-        url
+        "python",
+        "-m",
+        "yt_dlp",
+        "-f",
+        "bv*+ba/b",
+        "--merge-output-format",
+        "mp4",
+        "-o",
+        OUTPUT_FILE,
+        url,
     ]
 
     subprocess.run(command, check=True)
