@@ -1,4 +1,4 @@
-name: YouTube Auto Upload
+name: YouTube Network Engine
 
 on:
   workflow_dispatch:
@@ -29,8 +29,8 @@ jobs:
     - name: Download video
       run: python download.py
 
-    - name: Edit video
-      run: python edit.py
+    - name: Create variations
+      run: python variation.py
 
     - name: Generate metadata
       run: python metadata.py
@@ -40,10 +40,10 @@ jobs:
         DELAY=$((RANDOM % 7200))
         sleep $DELAY
 
-    - name: Upload video
+    - name: Upload network videos
       env:
         YT_CREDENTIALS: ${{ secrets.YT_CREDENTIALS }}
       run: python Upload.py
 
-    - name: Learn from performance
+    - name: Learning update
       run: python analytics.py
