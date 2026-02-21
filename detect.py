@@ -80,3 +80,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+with open("detect.log", "a") as f:
+    f.write("RUN COMPLETE\n")
