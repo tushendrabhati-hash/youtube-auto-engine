@@ -12,15 +12,14 @@ def extract_video_id():
     for line in lines:
         if "NEW_VIDEO::" in line:
             parts = line.strip().split("::")
-            return parts[1]   # video id
+            return parts[1]
 
-    raise Exception("No video found in detect.log")
+    raise Exception("No video found")
 
 
 def download_video():
 
     video_id = extract_video_id()
-
     url = f"https://www.youtube.com/watch?v={video_id}"
 
     print("Downloading:", url)
@@ -28,7 +27,8 @@ def download_video():
     command = [
         "yt-dlp",
         "--cookies", "cookies.txt",
-        "-f", "mp4",
+        "-f", "bv*+ba/b",
+        "--merge-output-format", "mp4",
         "-o", OUTPUT,
         url
     ]
