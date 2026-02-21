@@ -3,7 +3,7 @@ name: YouTube Auto Upload
 on:
   workflow_dispatch:
   schedule:
-    # Daily 5:30 PM IST (12:00 UTC)
+    # Runs daily at 5:30 PM IST (12:00 UTC)
     - cron: '0 12 * * *'
 
 jobs:
@@ -12,15 +12,15 @@ jobs:
 
     steps:
 
-    # ------------------------------
+    # ----------------------------
     # Checkout Repository
-    # ------------------------------
+    # ----------------------------
     - name: Checkout repo
       uses: actions/checkout@v3
 
-    # ------------------------------
+    # ----------------------------
     # Install Dependencies
-    # ------------------------------
+    # ----------------------------
     - name: Install dependencies
       run: |
         sudo apt update
@@ -31,19 +31,22 @@ jobs:
                     feedparser \
                     yt-dlp
 
-    # ------------------------------
-    # Detect New Videos (PHASE 3)
-    # ------------------------------
+    # ----------------------------
+    # Detect New Videos
+    # ----------------------------
     - name: Detect new videos
-  run: python detect.py | tee detect.log
+      run: python detect.py | tee detect.log
 
+    # ----------------------------
+    # Download Detected Video
+    # ----------------------------
     - name: Download detected video
       run: python download.py
- 
-    # ------------------------------
+
+    # ----------------------------
     # Random Upload Delay
     # Upload happens between 6–8 PM IST
-    # ------------------------------
+    # ----------------------------
     - name: Random upload delay
       run: |
         echo "Waiting random time before upload..."
@@ -51,9 +54,9 @@ jobs:
         echo "Sleeping for $DELAY seconds"
         sleep $DELAY
 
-    # ------------------------------
+    # ----------------------------
     # Upload to YouTube
-    # ------------------------------
+    # ----------------------------
     - name: Upload to YouTube
       env:
         YT_CREDENTIALS: ${{ secrets.YT_CREDENTIALS }}
