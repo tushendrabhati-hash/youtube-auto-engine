@@ -3,7 +3,7 @@ name: YouTube Auto Upload
 on:
   workflow_dispatch:
   schedule:
-    # Runs daily at 5:30 PM IST (12:00 UTC)
+    # Daily 5:30 PM IST (12:00 UTC)
     - cron: '0 12 * * *'
 
 jobs:
@@ -11,23 +11,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    # ------------------------------
+    # Checkout Repository
+    # ------------------------------
     - name: Checkout repo
       uses: actions/checkout@v3
 
+    # ------------------------------
+    # Install Dependencies
+    # ------------------------------
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install ffmpeg -y
-        pip install google-api-python-client google-auth google-auth-oauthlib
+        pip install google-api-python-client \
+                    google-auth \
+                    google-auth-oauthlib \
+                    feedparser \
+                    yt-dlp
 
-    # 🎬 Create demo vertical shorts video
+    # ------------------------------
+    # Detect New Videos (PHASE 3)
+    # ------------------------------
+    - name: Detect new videos
+      run: python detect.py
+
+    # ------------------------------
+    # Demo Video Creator (temporary)
+    # (Next phase replace with downloader)
+    # ------------------------------
     - name: Create demo video
       run: |
         ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=10 \
-        -vf "drawtext=text='AUTO UPLOAD WORKING':fontsize=60:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2" \
+        -vf "drawtext=text='AUTO SYSTEM RUNNING':fontsize=60:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2" \
         output.mp4
 
-    # ⏱ RANDOM DELAY (6–8 PM IST upload window)
+    # ------------------------------
+    # Random Upload Delay
+    # Upload happens between 6–8 PM IST
+    # ------------------------------
     - name: Random upload delay
       run: |
         echo "Waiting random time before upload..."
@@ -35,7 +58,9 @@ jobs:
         echo "Sleeping for $DELAY seconds"
         sleep $DELAY
 
-    # 🚀 Upload video to YouTube
+    # ------------------------------
+    # Upload to YouTube
+    # ------------------------------
     - name: Upload to YouTube
       env:
         YT_CREDENTIALS: ${{ secrets.YT_CREDENTIALS }}
