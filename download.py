@@ -1,18 +1,29 @@
 import subprocess
-import os
 
-VIDEO_URL_FILE = "detect.log"
+LOG_FILE = "detect.log"
 OUTPUT = "output.mp4"
 
 
-def get_video_url():
-    with open(VIDEO_URL_FILE) as f:
-        return f.read().strip()
+def extract_video_id():
+
+    with open(LOG_FILE) as f:
+        lines = f.readlines()
+
+    for line in lines:
+        if "NEW_VIDEO::" in line:
+            parts = line.strip().split("::")
+            return parts[1]   # video id
+
+    raise Exception("No video found in detect.log")
 
 
 def download_video():
 
-    url = get_video_url()
+    video_id = extract_video_id()
+
+    url = f"https://www.youtube.com/watch?v={video_id}"
+
+    print("Downloading:", url)
 
     command = [
         "yt-dlp",
