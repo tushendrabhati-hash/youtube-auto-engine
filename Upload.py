@@ -1,63 +1,56 @@
 import os
 import random
+import json
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 
 from channel_picker import get_random_channel
 
-# =========================
-# CONFIG
-# =========================
-
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+
 VIDEO_FILE = "output.mp4"
+TOKEN_PATH = "tokens/token.json"
 CLIENT_SECRET = "client_secret.json"
-TOKEN_FOLDER = "tokens"
 
-# =========================
-# AUTHENTICATION
-# =========================
 
-def authenticate(channel_name):
-
-    os.makedirs(TOKEN_FOLDER, exist_ok=True)
-
-    token_file = f"{TOKEN_FOLDER}/token_{channel_name}.json"
+# =============================
+# AUTH SYSTEM (PERMANENT LOGIN)
+# =============================
+def authenticate():
 
     creds = None
 
-    # Load saved token
-    if os.path.exists(token_file):
+    # load saved token
+    if os.path.exists(TOKEN_PATH):
         creds = Credentials.from_authorized_user_file(
-            token_file, SCOPES
+            TOKEN_PATH, SCOPES
         )
 
-    # If no token → login required
+    # refresh or login
     if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CLIENT_SECRET, SCOPES
+            )
+            creds = flow.run_local_server(port=0)
 
-        flow = InstalledAppFlow.from_client_secrets_file(
-            CLIENT_SECRET,
-            SCOPES
-        )
-
-        creds = flow.run_local_server(port=0)
-
-        # Save token
-        with open(token_file, "w") as token:
+        # save token
+        os.makedirs("tokens", exist_ok=True)
+        with open(TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
 
-    youtube = build("youtube", "v3", credentials=creds)
-
-    return youtube
+    return build("youtube", "v3", credentials=creds)
 
 
-# =========================
+# =============================
 # METADATA GENERATOR
-# =========================
-
+# =============================
 def generate_metadata():
 
     titles = [
@@ -65,40 +58,34 @@ def generate_metadata():
         "😱 This Clip Is Blowing Up",
         "🚀 Trending Short Right Now",
         "💥 Internet Can't Stop Watching",
-        "⚡ This Short Is Everywhere",
     ]
 
     descriptions = [
         "Subscribe for daily viral shorts!",
         "More content coming daily 🚀",
         "Stay tuned for viral moments.",
-        "Daily trending content 🔥",
     ]
 
     return {
         "title": random.choice(titles),
         "description": random.choice(descriptions),
-        "tags": ["shorts", "viral", "trending", "reels"],
+        "tags": ["shorts", "viral", "trending"],
     }
 
 
-# =========================
-# UPLOAD VIDEO
-# =========================
-
+# =============================
+# UPLOAD ENGINE
+# =============================
 def upload_video():
 
     if not os.path.exists(VIDEO_FILE):
         print("❌ output.mp4 not found")
         return
 
-    # pick random channel
-    channel_name = get_random_channel()
-    print(f"🎯 Selected Channel: {channel_name}")
-
-    youtube = authenticate(channel_name)
+    youtube = authenticate()
 
     meta = generate_metadata()
+    channel_name = get_random_channel()
 
     body = {
         "snippet": {
@@ -124,18 +111,13 @@ def upload_video():
         media_body=media
     )
 
-    print("⬆ Uploading video...")
-
     response = request.execute()
 
-    print("✅ Uploaded Successfully!")
-    print("📺 Video ID:", response["id"])
-    print("📡 Channel:", channel_name)
+    print("\n✅ UPLOAD SUCCESS")
+    print("Video ID:", response["id"])
+    print("Channel:", channel_name)
 
 
-# =========================
-# RUN
-# =========================
-
+# =============================
 if __name__ == "__main__":
     upload_video()
