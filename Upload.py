@@ -1,56 +1,86 @@
 import os
-import json
+import random
+from datetime import datetime
+
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from google.oauth2.credentials import Credentials
 
-creds_json = os.environ["YT_CREDENTIALS"]
-creds_dict = json.loads(creds_json)
+from channel_picker import get_random_channel
 
-creds = Credentials.from_authorized_user_info(creds_dict)
+SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
-youtube = build("youtube", "v3", credentials=creds)
+VIDEO_FILE = "output.mp4"
 
-VIDEOS = [
-    "final1.mp4",
-    "final2.mp4",
-    "final3.mp4",
-    "final4.mp4"
-]
-
-TITLES = [
-    "🔥 Viral Clip You Must See",
-    "😱 Internet Can't Believe This",
-    "💥 Trending Everywhere Now",
-    "⚡ Watch Till End"
-]
+def authenticate():
+    flow = InstalledAppFlow.from_client_secrets_file(
+        "client_secret.json", SCOPES
+    )
+    creds = flow.run_local_server(port=0)
+    return build("youtube", "v3", credentials=creds)
 
 
-def upload(video, title):
+def generate_metadata():
+    titles = [
+        "🔥 Viral Shorts You Must Watch",
+        "😱 This Clip Is Blowing Up",
+        "🚀 Trending Short Right Now",
+        "💥 Internet Can't Stop Watching",
+    ]
+
+    descriptions = [
+        "Subscribe for daily viral shorts!",
+        "More content coming daily 🚀",
+        "Stay tuned for viral moments.",
+    ]
+
+    return {
+        "title": random.choice(titles),
+        "description": random.choice(descriptions),
+        "tags": ["shorts", "viral", "trending"],
+    }
+
+
+def upload_video():
+    if not os.path.exists(VIDEO_FILE):
+        print("❌ output.mp4 not found")
+        return
+
+    youtube = authenticate()
+
+    meta = generate_metadata()
+    channel_id = get_random_channel()
+
+    body = {
+        "snippet": {
+            "title": meta["title"],
+            "description": meta["description"],
+            "tags": meta["tags"],
+            "categoryId": "22"
+        },
+        "status": {
+            "privacyStatus": "public"
+        }
+    }
+
+    media = MediaFileUpload(
+        VIDEO_FILE,
+        chunksize=-1,
+        resumable=True
+    )
 
     request = youtube.videos().insert(
         part="snippet,status",
-        body={
-            "snippet": {
-                "title": title,
-                "description": "Auto network upload #shorts #viral",
-                "categoryId": "22"
-            },
-            "status": {"privacyStatus": "public"}
-        },
-        media_body=MediaFileUpload(video)
+        body=body,
+        media_body=media
     )
 
     response = request.execute()
-    print("Uploaded:", response["id"])
 
-
-def main():
-
-    for v, t in zip(VIDEOS, TITLES):
-        if os.path.exists(v):
-            upload(v, t)
+    print("✅ Uploaded Successfully")
+    print("Video ID:", response["id"])
+    print("Channel:", channel_id)
 
 
 if __name__ == "__main__":
-    main()
+    upload_video()
