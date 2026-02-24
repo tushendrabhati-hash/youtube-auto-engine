@@ -1,50 +1,94 @@
 import subprocess
+import sys
 import os
 
-VIDEO_FILE = "videos.txt"
-OUTPUT_FILE = "output.mp4"
+# ✅ Windows UTF-8 safety
+sys.stdout.reconfigure(encoding="utf-8")
 
 
-def get_video_url():
-    if not os.path.exists(VIDEO_FILE):
-        print("videos.txt not found")
-        return None
+# -----------------------------
+# EXTRACT VIDEO ID
+# -----------------------------
+def extract_video_id(url):
 
-    with open(VIDEO_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line.startswith("http"):
-                return line
+    if "v=" in url:
+        return url.split("v=")[-1].split("&")[0]
 
-    return None
+    if "youtu.be/" in url:
+        return url.split("youtu.be/")[-1].split("?")[0]
+
+    if "/shorts/" in url:
+        return url.split("/shorts/")[-1].split("?")[0]
+
+    return "video"
 
 
-def download_video():
+# -----------------------------
+# DOWNLOAD VIDEO INTO JOB
+# -----------------------------
+def download_video(url, job_folder):
 
-    url = get_video_url()
+    os.makedirs(job_folder, exist_ok=True)
 
-    if not url:
-        print("No video URL found")
-        return
+    vid = extract_video_id(url)
 
-    print("Downloading:", url)
+    # ordered filename
+    output_template = os.path.join(
+        job_folder,
+        f"001_{vid}.%(ext)s"
+    )
 
-    # ✅ IMPORTANT: use python module instead of yt-dlp exe
+    print(f"\n⬇ DOWNLOAD → {vid}")
+    print(f"📁 Folder → {job_folder}\n")
+
     command = [
-        "python",
+        sys.executable,
         "-m",
         "yt_dlp",
         "-f",
-        "bv*+ba/b",
-        "--merge-output-format",
-        "mp4",
+        "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]",
+        "--merge-output-format", "mp4",
+        "--no-playlist",
+        "--print", "after_move:filename",
         "-o",
-        OUTPUT_FILE,
+        output_template,
         url
     ]
 
-    subprocess.run(command, check=True)
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        print("❌ yt-dlp failed:")
+        print(e.stderr)
+        sys.exit(1)
+
+    # yt-dlp returns final filename
+    filename = result.stdout.strip().splitlines()[-1]
+
+    if not os.path.exists(filename):
+        print("❌ Download finished but file missing")
+        sys.exit(1)
+
+    print(f"✅ Download Complete → {filename}")
+
+    # IMPORTANT: queue_manager reads this
+    print(filename)
 
 
+# -----------------------------
 if __name__ == "__main__":
-    download_video()
+
+    if len(sys.argv) < 3:
+        print("❌ Usage: download.py <url> <job_folder>")
+        sys.exit(1)
+
+    url = sys.argv[1]
+    job_folder = sys.argv[2]
+
+    download_video(url, job_folder)

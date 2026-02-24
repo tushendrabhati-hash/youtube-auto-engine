@@ -1,0 +1,141 @@
+{
+  "downloaded": [
+    "6FkkIDpYLz0",
+    "mHuTad7ztSM",
+    "_idyawrD_MY",
+    "-dUOX_Uqs-4",
+    "Gbo6_dC48Qo",
+    "OxzjpPBYCNI",
+    "GMmN6Y86jj4",
+    "DIxL0kX5_lA",
+    "BxCq1sX5ID4",
+    "nucIQR5dziM",
+    "KCyMxbyljOQ",
+    "-shSumxY1sc"
+  ],
+  "processed": [
+    "6FkkIDpYLz0",
+    "mHuTad7ztSM",
+    "_idyawrD_MY",
+    "-dUOX_Uqs-4",
+    "Gbo6_dC48Qo",
+    "OxzjpPBYCNI",
+    "GMmN6Y86jj4",
+    "DIxL0kX5_lA",
+    "BxCq1sX5ID4",
+    "nucIQR5dziM",
+    "KCyMxbyljOQ",
+    "-shSumxY1sc",
+    "DfiOUFo386M",
+    "vwXQlkPrZ2s",
+    "VmLkuqHM8-U",
+    "aYmen16GPKA"
+  ],
+  "last_download": "[OK] Saved for edit -> output_-shSumxY1sc.mp4",
+  "channel_last_upload": {
+    "Viral_content_reacts": 1771866719.8142412,
+    "YummyVibes_Only": 1771918592.761912,
+    "CharsiShorts1": 1771918787.0778167,
+    "ReactBites": 1771914945.1822941,
+    "Beast-Jagah": 1771918896.9782727,
+    "React_with_Khushi": 1771918513.2272587
+  },
+  "video_files": {},
+  "retries": {
+    "hook_detect": 0,
+    "edit_step": 0,
+    "metadata_step": 0,
+    "thumbnail_step": 0,
+    "upload_step": 5,
+    "youtube_upload": 5,
+    "analytics_fetch": 0,
+    "thumbnail_upload": 0
+  },
+  "pending_analytics": [
+    {
+      "channel": "ReactBites",
+      "video_id": "JHlbXeexMVs",
+      "check_after": 1771925888
+    },
+    {
+      "channel": "React_with_Khushi",
+      "video_id": "yM2SyFnGESA",
+      "check_after": 1771929368
+    },
+    {
+      "channel": "YummyVibes_Only",
+      "video_id": "bkZCLdMlRxI",
+      "check_after": 1771929540
+    },
+    {
+      "channel": "CharsiShorts1",
+      "video_id": "A-yz9r8ouEc",
+      "check_after": 1771929686
+    },
+    {
+      "channel": "Beast-Jagah",
+      "video_id": "zh1VMMuWWu4",
+      "check_after": 1771929837
+    }
+  ],
+  "upload_stats": {
+    "Beast-Jagah": {
+      "17": [
+        0,
+        1657
+      ],
+      "21": [
+        0
+      ],
+      "13": [
+        0,
+        1805
+      ]
+    },
+    "React_with_Khushi": {
+      "17": [
+        0,
+        2506
+      ],
+      "21": [
+        2
+      ],
+      "13": [
+        0,
+        1685
+      ]
+    },
+    "CharsiShorts1": {
+      "22": [
+        0,
+        1962
+      ],
+      "11": [
+        1
+      ],
+      "13": [
+        0,
+        2436
+      ]
+    },
+    "YummyVibes_Only": {
+      "23": [
+        0,
+        2571
+      ],
+      "11": [
+        0
+      ],
+      "13": [
+        0,
+        1794
+      ]
+    },
+    "ReactBites": {
+      "12": [
+        0,
+        2112
+      ]
+    }
+  }
+}
