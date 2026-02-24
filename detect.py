@@ -1,85 +1,171 @@
-import feedparser
-import json
+import requests
 import os
+import subprocess
+import json
+import xml.etree.ElementTree as ET
 
-# ===== SOURCE CHANNELS =====
-SOURCE_CHANNELS = [
-    "UCFLrwzF6qPrj3J3G5c9bmmA",
-    "UCVLWtYLZKAdcInt3xXw4oVA",
-    "UCZi87CfJkSMaRGBV73od5Vg",
-    "UCGu2HSFJf1ZwPgwvOVmVNSQ",
-    "UCp-AoFVXhWtJbfjKi7mi8Hw",
-    "UCkaIQsmRkSHWJbJbJ0wh9piDw"
-]
+CHANNEL_FILE = "source_channels.json"
+VIDEO_FILE = "videos.txt"
 
-# ===== YOUR TARGET CHANNELS =====
-TARGET_CHANNELS = [
-    "CharsiShorts1",
-    "ReactBites",
-    "Viral_content_reacts",
-    "YummyVibes_Only"
-]
-
-STATE_FILE = "state.json"
+# ⭐ IMPORTANT SAFETY
+# detect only latest uploads per channel
+LATEST_CHECK_LIMIT = 2
 
 
-# ---------- STATE ----------
-def load_state():
-    if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, "r") as f:
-            return json.load(f)
-    return {"videos": {}, "rotation": 0}
+# -----------------------------
+# LOAD CHANNEL IDS
+# -----------------------------
+def load_channels():
+
+    if not os.path.exists(CHANNEL_FILE):
+        print("❌ source_channels.json not found")
+        return []
+
+    with open(CHANNEL_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    return data.get("channels", [])
 
 
-def save_state(state):
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f)
+# -----------------------------
+# LOAD EXISTING IDS
+# -----------------------------
+def existing_ids():
+
+    ids = set()
+
+    if not os.path.exists(VIDEO_FILE):
+        return ids
+
+    with open(VIDEO_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            if "NEW_VIDEO::" in line:
+                ids.add(line.strip().split("::")[1])
+
+    return ids
 
 
-# ---------- ROTATION ----------
-def get_next_channel(state):
-    index = state["rotation"] % len(TARGET_CHANNELS)
-    channel = TARGET_CHANNELS[index]
-    state["rotation"] += 1
-    return channel
+# -----------------------------
+# FALLBACK SHORT CHECK
+# -----------------------------
+def is_short(video_id):
+
+    try:
+        cmd = [
+            "yt-dlp",
+            "--dump-json",
+            "--skip-download",
+            f"https://www.youtube.com/watch?v={video_id}"
+        ]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=12
+        )
+
+        if result.returncode != 0:
+            return False
+
+        data = json.loads(result.stdout)
+        duration = data.get("duration", 0)
+
+        return duration and duration <= 60
+
+    except:
+        return False
 
 
-# ---------- DETECTION ----------
-def check_channel(channel_id, state):
+# -----------------------------
+# FETCH CHANNEL RSS
+# -----------------------------
+def fetch_channel(channel_id):
 
     url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-    feed = feedparser.parse(url)
 
-    latest = feed.entries[0]
-    video_id = latest.yt_videoid
+    r = requests.get(url, timeout=10)
 
-    if state["videos"].get(channel_id) == video_id:
-        return None
+    if r.status_code != 200:
+        return []
 
-    state["videos"][channel_id] = video_id
+    root = ET.fromstring(r.text)
 
-    upload_channel = get_next_channel(state)
+    videos = []
 
-    print(
-        f"NEW_VIDEO::{video_id}::UPLOAD_TO::{upload_channel}"
-    )
+    for entry in root.findall("{http://www.w3.org/2005/Atom}entry"):
 
-    return video_id
+        video_id = entry.find(
+            "{http://www.youtube.com/xml/schemas/2015}videoId"
+        ).text
 
+        link_elem = entry.find("{http://www.w3.org/2005/Atom}link")
+        link = link_elem.attrib.get("href")
 
-# ---------- MAIN ----------
-def main():
+        videos.append({
+            "id": video_id,
+            "link": link
+        })
 
-    state = load_state()
-
-    for ch in SOURCE_CHANNELS:
-        check_channel(ch, state)
-
-    save_state(state)
+    return videos
 
 
+# -----------------------------
+# MAIN DETECT
+# -----------------------------
+def detect():
+
+    print("\n🚀 DETECT START")
+
+    channels = load_channels()
+    seen = existing_ids()
+
+    new_count = 0
+
+    for ch in channels:
+
+        print(f"🔎 Checking channel → {ch}")
+
+        try:
+            videos = fetch_channel(ch)
+        except Exception as e:
+            print("⚠ Fetch failed:", e)
+            continue
+
+        # ⭐ FLOOD PROTECTION
+        videos = videos[:LATEST_CHECK_LIMIT]
+
+        for v in videos:
+
+            vid = v["id"]
+            link = v["link"]
+
+            if vid in seen:
+                continue
+
+            # FAST SHORT CHECK
+            if "/shorts/" in link:
+                valid_short = True
+            else:
+                valid_short = is_short(vid)
+
+            if not valid_short:
+                continue
+
+            with open(VIDEO_FILE, "a", encoding="utf-8") as f:
+                f.write(f"NEW_VIDEO::{vid}\n")
+
+            print(f"✅ NEW SHORT FOUND → {link}")
+
+            seen.add(vid)
+            new_count += 1
+
+    if new_count == 0:
+        print("No new Shorts found")
+
+    print("✅ DETECT COMPLETE\n")
+
+
+# -----------------------------
 if __name__ == "__main__":
-    main()
-    
-with open("detect.log", "a") as f:
-    f.write("RUN COMPLETE\n")
+    detect()
